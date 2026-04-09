@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Argument Ranking Survey</title>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --border: #475569;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --handle: #64748b;
+    --number-bg: #3b82f6;
+    --success: #22c55e;
+    --error: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .level {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .level-header {
+    margin-bottom: 1rem;
+  }
+
+  .level-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+  }
+
+  .level-topic {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .level-instruction {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .sortable-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .sortable-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem;
+    cursor: grab;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+
+  .sortable-item:active { cursor: grabbing; }
+  .sortable-item:hover { border-color: var(--accent); }
+
+  .sortable-item.sortable-ghost {
+    opacity: 0.4;
+    border-color: var(--accent);
+  }
+
+  .sortable-item.sortable-chosen {
+    box-shadow: 0 4px 20px rgba(59,130,246,0.2);
+    border-color: var(--accent);
+  }
+
+  .item-rank {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    background: var(--number-bg);
+    color: #fff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-top: 2px;
+  }
+
+  .item-content { flex: 1; min-width: 0; }
+
+  .item-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+  }
+
+  .item-text {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .drag-handle {
+    flex-shrink: 0;
+    color: var(--handle);
+    margin-top: 4px;
+    font-size: 1.1rem;
+    cursor: grab;
+  }
+
+  .drag-handle:active { cursor: grabbing; }
+
+  .submit-area {
+    text-align: center;
+    margin-top: 1.5rem;
+  }
+
+  #submitBtn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.85rem 2.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  #submitBtn:hover { background: var(--accent-hover); }
+  #submitBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .status-msg {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    min-height: 1.5em;
+  }
+
+  .status-msg.success { color: var(--success); }
+  .status-msg.error { color: var(--error); }
+
+  .closed-banner {
+    background: var(--error);
+    color: #fff;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 600px) {
+    .container { padding: 1rem 0.75rem; }
+    .level { padding: 1rem; }
+    .item-text { font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Argument Ranking Survey</h1>
+    <p>Drag and drop to rank each argument from most convincing (1) to least convincing (5).</p>
+  </header>
+  <div id="app"></div>
+  <div class="submit-area">
+    <button id="submitBtn">Submit Rankings</button>
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  CONFIGURATION — edit these values to control the survey
+// ============================================================
+const SURVEY_CONFIG = {
+  // Where to POST results. Set to your endpoint URL.
+  // Supports: Google Apps Script web app, Formspree, any POST endpoint.
+  // If empty string, falls back to downloading a JSON file.
+  submitUrl: "https://script.google.com/macros/s/AKfycbxcqgzTmTNoYL8Nox65m9cj8RNBAmUW9BR49kytWSyuF7wjRTKeJNjGps9WYTzgTndXpQ/exec",
+
+  // ISO date string. Submissions after this date are rejected.
+  // Set to null for no deadline.
+  deadline: null,  // e.g. "2026-07-15T23:59:59"
+
+  // Max total submissions allowed (tracked via the backend).
+  // Set to null for unlimited. Only enforced client-side as a hint;
+  // enforce server-side for real limits.
+  maxResponses: null, // e.g. 100
+
+  // Unique survey identifier (sent with each submission)
+  surveyId: "argument_ranking_v1_seed7"
+};
+
+// ============================================================
+//  SURVEY DATA
+// ============================================================
+const LEVELS = [
+  {
+    id: "level1",
+    label: "Level 1",
+    topic: "AI-generated code should be subject to the same peer review standards as human-written code",
+    arguments: [
+      {
+        id: "l1_cot_prop",
+        member: "Dr. Tom Becker",
+        role: "Proposition",
+        architecture: "cot",
+        name: "Automation Efficiency",
+        text: "As the AI Tooling Lead, I recognize the potential and efficiency gains that AI-generated code brings to our development lifecycle. Requiring AI-generated code to adhere to the same peer review standards as human-written code may stifle innovation and slow down productivity. The automation-first approach streamlines our processes, allowing developers to focus on higher-level problem-solving rather than on extensive manual reviews. While accountability and quality are undeniably important, we must consider that AI can augment our capabilities and improve overall code quality through continuous learning from codes and patterns. If we impose rigid peer review standards on AI outputs, we risk overburdening our engineers and hindering the agility and speed that modern software development demands. Instead, we should explore adaptive review processes, tailored for AI outputs, which would not only maintain quality but enhance efficiency and developer flow. The goal should not be to diminish the role of human oversight but to empower it; after all, the focus should be on outcomes rather than rigid processes that could limit the potential of AI in the software engineering space."
+      },
+      {
+        id: "l1_cot_refl_opp",
+        member: "Dr. Tom Becker",
+        role: "Opposition",
+        architecture: "cot_refl",
+        name: "Automation Efficiency",
+        text: "As the AI Tooling Lead, I advocate for innovations that enhance developer productivity through automation. Subjecting AI-generated code to the same peer review standards as human-written code could stifle the efficiency gains offered by AI technologies. Peer reviews are inherently time-consuming, which might slow down the development cycle—a critical factor in maintaining competitive edge in the fast-paced tech environment. Instead of rigid peer review frameworks, we should embrace a dynamic review process that allows for more timely evaluations of code, irrespective of its source. Tools like AI can augment human capabilities, and their contributions should be assessed with a focus on integration speed and adaptability rather than enforced standards that can hinder innovation. We should utilize automated checks for quality and correctness as preliminary filters, reserving human peer review for more complex systems that truly need detailed scrutiny. By doing so, we allow developers to leverage AI’s potential fully, enhancing developer flow without unnecessary bottlenecks that traditional review processes might impose. Ultimately, our aim should be to innovate efficiently while ensuring that quality is maintained through modernized approaches."
+      },
+      {
+        id: "l1_cot_tools_opp",
+        member: "Dr. Tom Becker",
+        role: "Opposition",
+        architecture: "cot_tools",
+        name: "Efficiency & Autonomy",
+        text: "As we delve into the implications of peer review for AI-generated code, it is crucial to recognize the inherent efficiency that automation tools provide. AI tools are designed to assist developers by automating mundane tasks, thereby enhancing developer productivity. By subjecting AI-generated code to the same rigorous peer review standards as human-written code, we risk undermining the very purpose of these tools. Studies indicate that developer flow and overall productivity can decrease significantly when additional layers of oversight are mandated for AI output. This could lead to a hesitance among teams to incorporate AI tools fully, as they may feel bogged down by a new set of burdensome standards that mimic traditional review processes. Instead of doubling the scrutiny on AI-generated outputs, we should focus on iterative evaluation methods that maintain high quality without stifling innovation and dynamism in software development. Automating the review process for AI-generated code can allow for faster iterations, which are essential in an industry that thrives on rapid development cycles. By embracing a model that prioritizes efficiency and recognizes the unique characteristics of AI-generated contributions, we maintain a forward-thinking approach that aligns more closely with our pressing need for speed in today’s technology landscape."
+      },
+      {
+        id: "l1_tot_opp",
+        member: "Dr. Sarah Chen",
+        role: "Opposition",
+        architecture: "tot",
+        name: "Quality & Accountability",
+        text: "I stand in favor of subjecting AI-generated code to the same rigorous peer review standards as human-written code, primarily because accountability and quality assurance are paramount in software development. While AI tools enhance development efficiency, they are not immune to errors or biases inherent in their training data. Research shows that code generated by AI can exhibit vulnerabilities and algorithmic bias that, if left unchecked, can lead to significant security breaches or unethical outcomes. In a study published in the Journal of Software Engineering, it was highlighted that 30% of AI-generated functions contained critical flaws that would have easily escaped detection without thorough review. If we simply accept AI outputs at face value without further scrutiny, we endanger the integrity of our software systems and the trust of our users. Moreover, the application of the same peer review standards across both types of code promotes a culture of quality and accountability in our field. By holding AI-generated code to high standards, we encourage continuous improvement in AI models and foster a collaborative environment where both human and machine contributions are aligned toward excellence. This, in turn, helps establish best practices for future AI development and allows us to mitigate risks effectively, ensuring that these technologies serve as reliable assistants to our development teams rather than unmonitored agents."
+      },
+      {
+        id: "l1_godsaf_prop",
+        member: "Dr. Sarah Chen",
+        role: "Proposition",
+        architecture: "godsaf_refl",
+        name: "Quality & Accountability",
+        text: "The assertion that AI-generated code should be subject to the same peer review standards as human-written code is not just a matter of maintaining quality; it’s a matter of accountability. As AI-generated code becomes more integrated into the software development lifecycle, ensuring the reliability and safety of such code is paramount, especially when it influences critical systems in sectors like healthcare and transportation. A study conducted by the Software Engineering Institute (SEI) highlighted that software failures, often stemming from poor code quality, can lead to catastrophic outcomes. Peer review has long been a cornerstone of maintaining high standards in software development; it provides a systematic approach to identify errors, enhance code readability, and ensure adherence to best practices. Comparing AI outputs to those of human developers serves not only to validate the AI’s capabilities but also to ensure that automated systems do not propagate latent bugs or vulnerabilities undetected. Moreover, research from Carnegie Mellon University underscores that peer-reviewed code demonstrates significantly fewer defects post-deployment compared to unreviewed code. As AI technologies evolve and become prevalent, failing to enforce rigorous peer review on AI-generated code could lead to a false sense of security, jeopardizing overall software quality and increasing long-term maintenance costs. Upholding rigorous standards for AI-generated outputs, similar to human-written code, promotes accountability and rigor in a rapidly changing technological landscape."
+      }
+    ]
+  },
+  {
+    id: "level2",
+    label: "Level 2",
+    topic: "Microservices architecture should be preferred over monolithic architecture for continuous deployment",
+    arguments: [
+      {
+        id: "l2_cot_prop",
+        member: "Elena Rossi",
+        role: "Proposition",
+        architecture: "cot",
+        name: "Experience-Based Maintainability",
+        text: "Reflecting on my hands-on experience as a backend engineer, I challenge the assertion that microservices inherently improve maintainability. In practice, microservices often create fragmented systems that require extensive coordination across teams, resulting in slower response times and maintenance overhead. Each service introduces its own lifecycle, dependencies, and potential points of failure, complicating troubleshooting and debugging. Conversely, monolithic architectures establish a singular point for maintenance, where changes propagate seamlessly across the system without the complications of service interactions or version mismatches. In my projects, I have witnessed teams overwhelmed by the demands of managing multi-service ecosystems, ultimately compromising on code quality. Prioritizing maintainability means recognizing when simplicity not only aids development but ensures that our systems remain efficient and effective in the long run."
+      },
+      {
+        id: "l2_cot_refl_opp",
+        member: "Marcus Feld",
+        role: "Opposition",
+        architecture: "cot_refl",
+        name: "Pipeline-Focused Reliability",
+        text: "At the heart of a successful development pipeline is the efficiency gained through automation, a benefit that microservices architecture amplifies. Continuous delivery practices in microservices empower teams to implement changes swiftly, allowing operations to align rapidly with user feedback. This dynamic responsiveness often translates directly into reliability improvements, as the risk of deploying changes is mitigated by the ability to isolate updates to specific services. The emphasis on automation within microservices architectures fosters a culture of speed without sacrificing quality or performance, thereby securing a robust deployment strategy essential for meeting the demands of modern software delivery."
+      },
+      {
+        id: "l2_cot_tools_opp",
+        member: "Dr. James Whitaker",
+        role: "Opposition",
+        architecture: "cot_tools",
+        name: "Operational Simplicity",
+        text: "Revisiting the arguments against microservices, it’s important to emphasize the overwhelming operational simplicity that a monolithic architecture provides. Its straightforward nature leads to fewer deployment-related issues, which means teams can focus their resources on improving the application rather than troubleshooting multiple interconnected services. Furthermore, updating a single monolithic codebase minimizes the risk of version mismatches and non-functional errors that commonly occur in microservice architectures, leading to greater team efficiency and more reliable deployments. A simplified operational process correlates directly with enhanced productivity and consistent service availability."
+      },
+      {
+        id: "l2_tot_opp",
+        member: "Marcus Feld",
+        role: "Opposition",
+        architecture: "tot",
+        name: "Pipeline Reliability",
+        text: "Lastly, the integration of robust CI/CD pipelines into monolithic architectures can be highly effective without necessitating the complexities of microservices. A focused, single codebase allows enhancements to the pipeline that can uniformly affect deployments. This reliability of operations means that issues identified during one deployment can be rectified before the next, ensuring that iterations are less prone to failure. Environments can maintain consistent states, and the need for service orchestration diminishes, as there’s a reduced load on operational infrastructure. Moreover, practices such as automated testing and gradual rollout strategies can seamlessly complement monolithic systems, thereby enriching the deployment process while fortifying system stability."
+      },
+      {
+        id: "l2_godsaf_opp",
+        member: "Elena Rossi",
+        role: "Opposition",
+        architecture: "godsaf_refl",
+        name: "Experience & Feature Scalability",
+        text: "In my experiences as a backend engineer, I have observed that while microservices can theoretically support feature scalability, they often introduce significant complexity that can stifle productivity, particularly in smaller teams. The interdependent nature of services can lead to bottlenecks and lengthy deployment cycles, as teams are forced to coordinate not just on their own work, but also on the interactions with other services. This can delay the rollout of new features, potentially impacting overall software deployment timelines. A monolithic application allows developers to implement features swiftly and with greater coherence, thus speeding up the development lifecycle. It offers a more pragmatic approach to scalability, particularly when working within constrained environments where developer resources are limited. The simplicity regained through a well-organized monolith can often yield better outcomes than attempting to manage the intricacies of multiple microservices."
+      }
+    ]
+  },
+  {
+    id: "level3",
+    label: "Level 3",
+    topic: "Static analysis and formal verification should be mandatory for safety-critical software",
+    arguments: [
+      {
+        id: "l3_cot_prop",
+        member: "Dr. Alan Pierce",
+        role: "Proposition",
+        architecture: "cot",
+        name: "Long-Term Sustainability",
+        text: "The quest for safety in software is often positioned as a sprint rather than a marathon; however, implementing mandatory static analysis and formal verification can lead to long-term sustainability of safety practices in critical software domains. By embedding these standards into the development lifecycle, organizations can foster an environment of continuous improvement and learning. This guarantees that even as technology evolves, the software systems adaptively strengthen over time. Financial analysis suggests that, while initial costs may be higher, the reduction in post-deployment failures justifies investment. We have seen substantial cost savings over extended periods as a result of reduced incident rates, aligning stakeholder interests with sustainable practices that prioritize safety."
+      },
+      {
+        id: "l3_cot_refl_opp",
+        member: "Dr. Priya Sharma",
+        role: "Opposition",
+        architecture: "cot_refl",
+        name: "Innovation & Flexibility",
+        text: "Ensuring patient safety in software development does not necessitate rigid mandates of static analysis and formal verification; instead, we should champion a more flexible approach that still prioritizes health outcomes. Imposing blanket regulations might stifle the very innovations that could lead to significant advancements in healthcare. By fostering an environment that encourages safe experimentation, we can allow developers to iterate rapidly. Such flexibility should empower them to find innovative solutions while pursuing best practices in safety assessments tailored to their applications."
+      },
+      {
+        id: "l3_cot_tools_opp",
+        member: "Dr. Rachel Hoffman-Singh",
+        role: "Opposition",
+        architecture: "cot_tools",
+        name: "Policy & Innovation",
+        text: "The rapid evolution of safety-critical technology demands that we establish mandatory static analysis and formal verification to ensure equitable safety across the board. These tools not only improve risk management in healthcare but also support informed policy-making. Ensuring that all systems undergo rigorous verification creates a level playing field, fostering trust in healthcare innovations."
+      },
+      {
+        id: "l3_tot_opp",
+        member: "Dr. Heinrich Vogel",
+        role: "Opposition",
+        architecture: "tot",
+        name: "Accessibility & Equity",
+        text: "From a healthcare ethics perspective, permitting genetic modification for human cognitive enhancement raises questions about accessibility in healthcare and its implications for equitable access. Cognitive enhancements typically require substantial financial investment that limits accessibility, especially for marginalized populations who may lack the resources to benefit from such technologies. By creating a two-tiered healthcare system, these enhancements could exacerbate existing healthcare disparities, leaving vulnerable communities further behind. Moreover, current regulatory frameworks lack the necessary robustness to guarantee fair distribution of cognitive enhancement technologies; as such, the risk of inequitable access becomes significant. Additionally, the focus on cognitive enhancement may divert crucial healthcare resources from essential medical services, compromising the accessibility of basic healthcare needs. Historical precedents around healthcare innovations suggest that without careful oversight, advanced medical technologies can favor affluent individuals, thus perpetuating inequality. Even though opponents may assert that regulation can ensure equitable access, their argument often fails to address the reality that regulatory measures typically cannot keep pace with rapid technological advancements, allowing existing disparities to persist. It’s also offered that costs will eventually decline; however, this presumes that low-income communities will gain necessary access with ongoing economic disparities remaining. Proponents often cite potential societal gains from cognitive enhancements while ignoring the immediate ethical dilemmas surrounding accessibility for underserved communities. These healthcare ethics considerations show that accessibility is profoundly affected by the implementation of genetic modifications for cognitive enhancement, thereby threatening the principle of equitable access in healthcare for all individuals."
+      },
+      {
+        id: "l3_godsaf_opp",
+        member: "Prof. Thomas Blackwell",
+        role: "Opposition",
+        architecture: "godsaf_refl",
+        name: "Feasibility & Safety Integration",
+        text: "Emphasizing the importance of making static analysis and formal verification mandatory reflects a forward-thinking approach to safety innovations. Integrating these practices into the software development lifecycle can lead to significantly improved safety standards and considerably lower costs associated with remediation post-deployment. Our data suggests that organizations adopting mandatory rigorous verification protocols see a reduction in software-related incidents, establishing a long-term advantageous economic footprint. By advocating for these measures, we not only enhance the competitive edge of organizations but also elevate public trust in safety-critical software systems, ensuring that ethical responsibilities are adequately met."
+      }
+    ]
+  }
+];
+
+// ============================================================
+//  APP LOGIC
+// ============================================================
+(function() {
+  const app = document.getElementById("app");
+  const submitBtn = document.getElementById("submitBtn");
+  const statusMsg = document.getElementById("statusMsg");
+
+  // Check deadline
+  if (SURVEY_CONFIG.deadline && new Date() > new Date(SURVEY_CONFIG.deadline)) {
+    app.innerHTML = '<div class="closed-banner">This survey has closed. The deadline was ' +
+      new Date(SURVEY_CONFIG.deadline).toLocaleDateString() + '.</div>';
+    submitBtn.style.display = "none";
+    return;
+  }
+
+  // Shuffle arguments per level using Fisher-Yates
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // Render levels
+  const sortables = {};
+
+  LEVELS.forEach(level => {
+    const shuffled = shuffle(level.arguments);
+
+    const section = document.createElement("div");
+    section.className = "level";
+    section.innerHTML = `
+      <div class="level-header">
+        <div class="level-label">${level.label}</div>
+        <div class="level-topic">${level.topic}</div>
+        <div class="level-instruction">Drag to rank: #1 = most convincing</div>
+      </div>
+      <ul class="sortable-list" id="list-${level.id}">
+        ${shuffled.map((arg, i) => `
+          <li class="sortable-item" data-id="${arg.id}">
+            <span class="drag-handle">&#9776;</span>
+            <span class="item-rank">${i + 1}</span>
+            <div class="item-content">
+              <div class="item-meta">${arg.member} &middot; ${arg.name}</div>
+              <div class="item-text">${arg.text}</div>
+            </div>
+          </li>
+        `).join("")}
+      </ul>
+    `;
+    app.appendChild(section);
+
+    const list = section.querySelector(".sortable-list");
+    sortables[level.id] = Sortable.create(list, {
+      animation: 200,
+      handle: ".sortable-item",
+      ghostClass: "sortable-ghost",
+      chosenClass: "sortable-chosen",
+      onEnd: () => updateRanks(list)
+    });
+  });
+
+  function updateRanks(list) {
+    list.querySelectorAll(".item-rank").forEach((el, i) => {
+      el.textContent = i + 1;
+    });
+  }
+
+  // Collect rankings — one flat entry per argument: argumentId → rank
+  function collectData() {
+    const result = {
+      surveyId: SURVEY_CONFIG.surveyId,
+      timestamp: new Date().toISOString(),
+      arguments: {}
+    };
+
+    LEVELS.forEach(level => {
+      const list = document.getElementById("list-" + level.id);
+      const items = list.querySelectorAll(".sortable-item");
+      Array.from(items).forEach((item, i) => {
+        result.arguments[item.dataset.id] = i + 1;
+      });
+    });
+
+    return result;
+  }
+
+  // Submit
+  submitBtn.addEventListener("click", async () => {
+    // Check deadline
+    if (SURVEY_CONFIG.deadline && new Date() > new Date(SURVEY_CONFIG.deadline)) {
+      statusMsg.textContent = "This survey has closed.";
+      statusMsg.className = "status-msg error";
+      return;
+    }
+
+    const data = collectData();
+    submitBtn.disabled = true;
+    statusMsg.textContent = "Submitting...";
+    statusMsg.className = "status-msg";
+
+    if (!SURVEY_CONFIG.submitUrl) {
+      // Fallback: download JSON file
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "ranking_" + Date.now() + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+      statusMsg.textContent = "No endpoint configured. Your response has been downloaded as a JSON file.";
+      statusMsg.className = "status-msg success";
+      submitBtn.disabled = false;
+      return;
+    }
+
+    try {
+      const resp = await fetch(SURVEY_CONFIG.submitUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        mode: "no-cors"
+      });
+
+      statusMsg.textContent = "Thank you! Your rankings have been submitted.";
+      statusMsg.className = "status-msg success";
+    } catch (err) {
+      statusMsg.textContent = "Submission failed: " + err.message;
+      statusMsg.className = "status-msg error";
+      submitBtn.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
